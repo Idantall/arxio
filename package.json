@@ -1,0 +1,17 @@
+{
+  "name": "arxio",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "docker-compose up web worker postgres redis zap",
+    "build": "pnpm --filter web build",
+    "start": "docker-compose up -d",
+    "lint": "eslint . && prettier --check .",
+    "test": "pnpx vitest run",
+    "migrate": "prisma migrate deploy"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=8"
+  }
+} 

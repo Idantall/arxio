@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  provider      String    @default("credentials") // or "github" etc.
+  image         String?
+  createdAt     DateTime  @default(now())
+  projects      Project[]
+}
+
+model Project {
+  id             String        @id @default(cuid())
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  repoProvider   String
+  repoOwner      String
+  repoName       String
+  defaultBranch  String        @default("main")
+  deployedUrl    String?
+  scans          ScanResult[]
+  createdAt      DateTime      @default(now())
+
+  @@index([userId])
+}
+
+model ScanResult {
+  id         String      @id @default(cuid())
+  project    Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId  String
+  type       ScanType
+  startedAt  DateTime    @default(now())
+  finishedAt DateTime?
+  status     ScanStatus
+  findings   Finding[]
+
+  @@index([projectId])
+}
+
+model Finding {
+  id           String      @id @default(cuid())
+  scan         ScanResult  @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  scanId       String
+  severity     Severity
+  ruleId       String
+  title        String
+  description  String      @db.Text
+  filePath     String?
+  lineStart    Int?
+  lineEnd      Int?
+  url          String?     // PoC request if DAST
+  resolved     Boolean     @default(false)
+  
+  @@index([scanId])
+}
+
+enum ScanType {
+  SAST
+  DAST
+}
+
+enum ScanStatus {
+  QUEUED
+  RUNNING
+  SUCCESS
+  ERROR
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  INFO
+} 

@@ -5,9 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
-import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@arxio/ui";
+import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Form, FormControl, FormItem, FormLabel, FormMessage } from "@arxio/ui";
 import { LockIcon, MailIcon, UserIcon } from "lucide-react";
 
 const formSchema = z.object({
@@ -71,35 +71,29 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8 dark:bg-gray-900">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <Image 
-            src="/logo.svg" 
-            alt="ARXIO Logo" 
-            width={120} 
-            height={40} 
-            className="mx-auto" 
-          />
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            הרשמה ל-ARXIO
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            צור חשבון חדש כדי להתחיל לסרוק את הפרויקטים שלך
+    <div className="container flex h-screen w-screen flex-col items-center justify-center">
+      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+        <div className="flex flex-col space-y-2 text-center">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            הצטרפו לקהילת ARXIO
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            צרו חשבון חדש בשניות ספורות
           </p>
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-center">פרטי חשבון</CardTitle>
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl text-center">הרשמה</CardTitle>
             <CardDescription className="text-center">
-              נא למלא את הפרטים הבאים כדי ליצור חשבון
+              מלאו את הפרטים הבאים כדי להתחיל
             </CardDescription>
           </CardHeader>
+
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
+                <Controller
                   control={form.control}
                   name="name"
                   render={({ field }) => (
@@ -116,7 +110,7 @@ export default function RegisterPage() {
                   )}
                 />
                 
-                <FormField
+                <Controller
                   control={form.control}
                   name="email"
                   render={({ field }) => (
@@ -133,7 +127,7 @@ export default function RegisterPage() {
                   )}
                 />
                 
-                <FormField
+                <Controller
                   control={form.control}
                   name="password"
                   render={({ field }) => (
@@ -150,7 +144,7 @@ export default function RegisterPage() {
                   )}
                 />
                 
-                <FormField
+                <Controller
                   control={form.control}
                   name="confirmPassword"
                   render={({ field }) => (
@@ -179,11 +173,12 @@ export default function RegisterPage() {
               </form>
             </Form>
           </CardContent>
-          <CardFooter className="flex justify-center">
-            <div className="text-sm">
-              יש לך כבר חשבון?{" "}
-              <Link href="/login" className="text-primary font-semibold hover:underline">
-                התחבר
+          
+          <CardFooter className="flex flex-col">
+            <div className="mt-4 text-center text-sm">
+              כבר יש לכם חשבון?{" "}
+              <Link href="/auth/login" className="underline">
+                התחברו כאן
               </Link>
             </div>
           </CardFooter>

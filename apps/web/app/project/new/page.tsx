@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Input, Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from "@arxio/ui";
-import { RepoIcon, FolderIcon, GitBranchIcon, AlertCircleIcon, InfoIcon } from "lucide-react";
+import { GithubIcon, FolderIcon, GitBranchIcon, AlertCircleIcon, InfoIcon } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(3, {
@@ -155,7 +155,7 @@ export default function NewProjectPage() {
                         <FormLabel>כתובת המאגר</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <RepoIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                            <GithubIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                             <Input placeholder="https://github.com/username/repo" className="pl-10" {...field} />
                           </div>
                         </FormControl>

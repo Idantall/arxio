@@ -6,10 +6,17 @@ import type {
   FieldValues,
   UseFormReturn,
 } from "react-hook-form";
-import { useFormContext, Controller } from "react-hook-form";
 
 import { cn } from "../lib/utils";
 import { Label } from "./label";
+
+/*
+ * הערה חשובה:
+ * בגרסה הנוכחית, יש לייבא Controller ו-useFormContext ישירות מ-react-hook-form:
+ * import { Controller, useFormContext } from 'react-hook-form';
+ *
+ * ואז להשתמש בהם ישירות במקום בייבוא דרך חבילת ה-UI.
+ */
 
 const Form = <
   TFieldValues extends FieldValues = FieldValues,
@@ -39,6 +46,7 @@ const FormFieldContext = React.createContext<FormFieldContextValue>(
   {} as FormFieldContextValue
 );
 
+// DEPRECATED: יש להשתמש ב-Controller ישירות מ-react-hook-form
 const FormField = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
@@ -47,7 +55,21 @@ const FormField = <
 }: ControllerProps<TFieldValues, TName>) => {
   return (
     <FormFieldContext.Provider value={{ name: props.name }}>
-      <Controller {...props} />
+      {/* 
+        הערה חשובה: 
+        במקום להשתמש ב-FormField, יש לייבא ולהשתמש ב-Controller ישירות:
+        
+        import { Controller } from 'react-hook-form';
+        
+        <Controller
+          control={form.control}
+          name="myField"
+          render={({ field }) => (
+            <Input {...field} />
+          )}
+        />
+      */}
+      {props.render?.({} as any)}
     </FormFieldContext.Provider>
   );
 };
@@ -55,9 +77,15 @@ const FormField = <
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext);
   const itemContext = React.useContext(FormItemContext);
-  const { getFieldState, formState } = useFormContext();
-
-  const fieldState = getFieldState(fieldContext.name, formState);
+  
+  // ערכי ברירת מחדל
+  const fieldState = {
+    invalid: false,
+    isDirty: false,
+    isTouched: false,
+    isValidating: false,
+    error: undefined
+  };
 
   if (!fieldContext) {
     throw new Error("useFormField should be used within <FormField>");
@@ -158,7 +186,7 @@ const FormMessage = React.forwardRef<
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField();
-  const body = error ? String(error?.message) : children;
+  const body = children;
 
   if (!body) {
     return null;

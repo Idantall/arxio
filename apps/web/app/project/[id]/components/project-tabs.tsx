@@ -7,27 +7,36 @@ import { CodeViewer } from "./code-viewer";
 import { ScanResults } from "./scan-results";
 import { startProjectScan } from "@/lib/api/projects";
 import { Play, AlertTriangle } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
 
 interface ProjectTabsProps {
   project: Project;
 }
 
 export function ProjectTabs({ project }: ProjectTabsProps) {
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("code");
   const [scanning, setScanning] = useState(false);
   const [scanType, setScanType] = useState<ScanType>(ScanType.SAST);
+  const [message, setMessage] = useState<{title: string, description: string, type: 'success' | 'error' | 'warning' | null}>({ title: '', description: '', type: null });
+  
+  // Clear message after 5 seconds
+  useEffect(() => {
+    if (message.type) {
+      const timer = setTimeout(() => {
+        setMessage({ title: '', description: '', type: null });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
   
   async function handleStartScan() {
     if (scanning) return;
     
     // DAST requires a deployed URL
     if (scanType === ScanType.DAST && !project.deployedUrl) {
-      toast({
+      setMessage({
         title: "Deployed URL Required",
         description: "DAST scans require a deployed URL. Please add one in project settings.",
-        variant: "destructive",
+        type: 'error'
       });
       return;
     }
@@ -37,20 +46,20 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
     try {
       const result = await startProjectScan(project.id, scanType);
       
-      toast({
+      setMessage({
         title: "Scan Started",
         description: `Your ${scanType} scan has been started.`,
-        variant: "success",
+        type: 'success'
       });
       
       // Automatically switch to results tab
       setActiveTab("results");
     } catch (error) {
       console.error("Failed to start scan:", error);
-      toast({
+      setMessage({
         title: "Failed to Start Scan",
         description: "An error occurred while trying to start the scan.",
-        variant: "destructive",
+        type: 'error'
       });
     } finally {
       setScanning(false);
@@ -59,6 +68,17 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
 
   return (
     <div className="flex-1 flex flex-col">
+      {message.type && (
+        <div className={`p-4 mb-4 ${
+          message.type === 'success' ? 'bg-green-100 text-green-800' : 
+          message.type === 'error' ? 'bg-red-100 text-red-800' : 
+          'bg-yellow-100 text-yellow-800'
+        }`}>
+          <h4 className="text-sm font-medium">{message.title}</h4>
+          <p className="text-sm">{message.description}</p>
+        </div>
+      )}
+      
       <div className="border-b px-4 py-2 flex justify-between items-center">
         <Tabs 
           defaultValue="code" 

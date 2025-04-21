@@ -15,7 +15,7 @@ interface CodeViewerProps {
 
 // Mock file structure for demo purposes
 // In a real app, this would be fetched from the API
-const mockFileStructure = {
+const mockFileStructure: FileNode = {
   name: "root",
   type: "folder",
   children: [

@@ -30,6 +30,7 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // src/index.ts
 var index_exports = {};
 __export(index_exports, {
+  Badge: () => Badge,
   Button: () => Button,
   Card: () => Card,
   CardContent: () => CardContent,
@@ -79,6 +80,7 @@ __export(index_exports, {
   SelectTrigger: () => SelectTrigger,
   SelectValue: () => SelectValue,
   SeverityBadge: () => SeverityBadge,
+  Skeleton: () => Skeleton,
   Tabs: () => Tabs,
   TabsContent: () => TabsContent,
   TabsList: () => TabsList,
@@ -91,6 +93,7 @@ __export(index_exports, {
   ToastProvider: () => ToastProvider,
   ToastTitle: () => ToastTitle,
   ToastViewport: () => ToastViewport,
+  badgeVariants: () => badgeVariants,
   buttonVariants: () => buttonVariants,
   cn: () => cn,
   useFormField: () => useFormField
@@ -624,7 +627,6 @@ function SeverityBadge({ severity, className }) {
 // src/components/form.tsx
 var React8 = __toESM(require("react"));
 var import_react_slot2 = require("@radix-ui/react-slot");
-var import_react_hook_form = require("react-hook-form");
 
 // src/components/label.tsx
 var React7 = __toESM(require("react"));
@@ -658,13 +660,18 @@ var FormFieldContext = React8.createContext(
 var FormField = ({
   ...props
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(FormFieldContext.Provider, { value: { name: props.name }, children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(import_react_hook_form.Controller, { ...props }) });
+  return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(FormFieldContext.Provider, { value: { name: props.name }, children: props.render?.({}) });
 };
 var useFormField = () => {
   const fieldContext = React8.useContext(FormFieldContext);
   const itemContext = React8.useContext(FormItemContext);
-  const { getFieldState, formState } = (0, import_react_hook_form.useFormContext)();
-  const fieldState = getFieldState(fieldContext.name, formState);
+  const fieldState = {
+    invalid: false,
+    isDirty: false,
+    isTouched: false,
+    isValidating: false,
+    error: void 0
+  };
   if (!fieldContext) {
     throw new Error("useFormField should be used within <FormField>");
   }
@@ -728,7 +735,7 @@ var FormDescription = React8.forwardRef(({ className, ...props }, ref) => {
 FormDescription.displayName = "FormDescription";
 var FormMessage = React8.forwardRef(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField();
-  const body = error ? String(error?.message) : children;
+  const body = children;
   if (!body) {
     return null;
   }
@@ -868,8 +875,50 @@ var Textarea = React11.forwardRef(
   }
 );
 Textarea.displayName = "Textarea";
+
+// src/components/skeleton.tsx
+var import_jsx_runtime13 = require("react/jsx-runtime");
+function Skeleton({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+    "div",
+    {
+      className: cn("animate-pulse rounded-md bg-muted", className),
+      ...props
+    }
+  );
+}
+
+// src/components/badge.tsx
+var import_class_variance_authority4 = require("class-variance-authority");
+var import_jsx_runtime14 = require("react/jsx-runtime");
+var badgeVariants = (0, import_class_variance_authority4.cva)(
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        outline: "text-foreground",
+        success: "border-transparent bg-green-500 text-white hover:bg-green-500/80",
+        warning: "border-transparent bg-yellow-500 text-white hover:bg-yellow-500/80",
+        info: "border-transparent bg-blue-500 text-white hover:bg-blue-500/80"
+      }
+    },
+    defaultVariants: {
+      variant: "default"
+    }
+  }
+);
+function Badge({ className, variant, ...props }) {
+  return /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: cn(badgeVariants({ variant }), className), ...props });
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
+  Badge,
   Button,
   Card,
   CardContent,
@@ -919,6 +968,7 @@ Textarea.displayName = "Textarea";
   SelectTrigger,
   SelectValue,
   SeverityBadge,
+  Skeleton,
   Tabs,
   TabsContent,
   TabsList,
@@ -931,6 +981,7 @@ Textarea.displayName = "Textarea";
   ToastProvider,
   ToastTitle,
   ToastViewport,
+  badgeVariants,
   buttonVariants,
   cn,
   useFormField

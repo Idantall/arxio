@@ -1,1 +1,11 @@
-{}
+{
+  "/_not-found": "app/_not-found.js",
+  "/page": "app/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/project/[id]/page": "app/project/[id]/page.js",
+  "/project/new/page": "app/project/new/page.js",
+  "/dashboard/new-project/page": "app/dashboard/new-project/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/register/page": "app/register/page.js",
+  "/auth/login/page": "app/auth/login/page.js"
+}

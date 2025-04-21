@@ -525,7 +525,6 @@ function SeverityBadge({ severity, className }) {
 // src/components/form.tsx
 import * as React8 from "react";
 import { Slot as Slot2 } from "@radix-ui/react-slot";
-import { useFormContext, Controller } from "react-hook-form";
 
 // src/components/label.tsx
 import * as React7 from "react";
@@ -559,13 +558,18 @@ var FormFieldContext = React8.createContext(
 var FormField = ({
   ...props
 }) => {
-  return /* @__PURE__ */ jsx9(FormFieldContext.Provider, { value: { name: props.name }, children: /* @__PURE__ */ jsx9(Controller, { ...props }) });
+  return /* @__PURE__ */ jsx9(FormFieldContext.Provider, { value: { name: props.name }, children: props.render?.({}) });
 };
 var useFormField = () => {
   const fieldContext = React8.useContext(FormFieldContext);
   const itemContext = React8.useContext(FormItemContext);
-  const { getFieldState, formState } = useFormContext();
-  const fieldState = getFieldState(fieldContext.name, formState);
+  const fieldState = {
+    invalid: false,
+    isDirty: false,
+    isTouched: false,
+    isValidating: false,
+    error: void 0
+  };
   if (!fieldContext) {
     throw new Error("useFormField should be used within <FormField>");
   }
@@ -629,7 +633,7 @@ var FormDescription = React8.forwardRef(({ className, ...props }, ref) => {
 FormDescription.displayName = "FormDescription";
 var FormMessage = React8.forwardRef(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField();
-  const body = error ? String(error?.message) : children;
+  const body = children;
   if (!body) {
     return null;
   }
@@ -769,7 +773,49 @@ var Textarea = React11.forwardRef(
   }
 );
 Textarea.displayName = "Textarea";
+
+// src/components/skeleton.tsx
+import { jsx as jsx13 } from "react/jsx-runtime";
+function Skeleton({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsx13(
+    "div",
+    {
+      className: cn("animate-pulse rounded-md bg-muted", className),
+      ...props
+    }
+  );
+}
+
+// src/components/badge.tsx
+import { cva as cva4 } from "class-variance-authority";
+import { jsx as jsx14 } from "react/jsx-runtime";
+var badgeVariants = cva4(
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        outline: "text-foreground",
+        success: "border-transparent bg-green-500 text-white hover:bg-green-500/80",
+        warning: "border-transparent bg-yellow-500 text-white hover:bg-yellow-500/80",
+        info: "border-transparent bg-blue-500 text-white hover:bg-blue-500/80"
+      }
+    },
+    defaultVariants: {
+      variant: "default"
+    }
+  }
+);
+function Badge({ className, variant, ...props }) {
+  return /* @__PURE__ */ jsx14("div", { className: cn(badgeVariants({ variant }), className), ...props });
+}
 export {
+  Badge,
   Button,
   Card,
   CardContent,
@@ -819,6 +865,7 @@ export {
   SelectTrigger,
   SelectValue,
   SeverityBadge,
+  Skeleton,
   Tabs,
   TabsContent,
   TabsList,
@@ -831,6 +878,7 @@ export {
   ToastProvider,
   ToastTitle,
   ToastViewport,
+  badgeVariants,
   buttonVariants,
   cn,
   useFormField

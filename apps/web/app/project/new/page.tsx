@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
-import { Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Input, Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from "@arxio/ui";
+import { Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Input, Form, FormControl, FormDescription, FormItem, FormLabel, FormMessage, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from "@arxio/ui";
 import { GithubIcon, FolderIcon, GitBranchIcon, AlertCircleIcon, InfoIcon } from "lucide-react";
 
 const formSchema = z.object({
@@ -87,7 +87,7 @@ export default function NewProjectPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
+              <Controller
                 control={form.control}
                 name="name"
                 render={({ field }) => (
@@ -104,7 +104,7 @@ export default function NewProjectPage() {
                 )}
               />
               
-              <FormField
+              <Controller
                 control={form.control}
                 name="description"
                 render={({ field }) => (
@@ -118,7 +118,7 @@ export default function NewProjectPage() {
                 )}
               />
               
-              <FormField
+              <Controller
                 control={form.control}
                 name="repositoryType"
                 render={({ field }) => (
@@ -147,7 +147,7 @@ export default function NewProjectPage() {
               
               {!isLocalRepo && (
                 <>
-                  <FormField
+                  <Controller
                     control={form.control}
                     name="repositoryUrl"
                     render={({ field }) => (
@@ -167,7 +167,7 @@ export default function NewProjectPage() {
                     )}
                   />
                   
-                  <FormField
+                  <Controller
                     control={form.control}
                     name="branch"
                     render={({ field }) => (
@@ -190,7 +190,7 @@ export default function NewProjectPage() {
               )}
               
               {isLocalRepo && (
-                <FormField
+                <Controller
                   control={form.control}
                   name="localPath"
                   render={({ field }) => (

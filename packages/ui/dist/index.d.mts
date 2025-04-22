@@ -9,7 +9,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import * as _radix_ui_react_slot from '@radix-ui/react-slot';
 import * as _radix_ui_react_label from '@radix-ui/react-label';
-import { FieldValues, UseFormReturn, FieldPath, ControllerProps } from 'react-hook-form';
+import { FieldValues, UseFormReturn } from 'react-hook-form';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { ClassValue } from 'clsx';
 
@@ -113,7 +113,6 @@ declare function SeverityBadge({ severity, className }: SeverityBadgeProps): rea
 declare const Form: <TFieldValues extends FieldValues = FieldValues, TContext = any, TTransformedValues = TFieldValues>({ children, ...props }: {
     children: React$1.ReactNode;
 } & UseFormReturn<TFieldValues, TContext, TTransformedValues>) => react_jsx_runtime.JSX.Element;
-declare const FormField: <TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>>({ ...props }: ControllerProps<TFieldValues, TName>) => react_jsx_runtime.JSX.Element;
 declare const useFormField: () => {
     invalid: boolean;
     isDirty: boolean;
@@ -160,10 +159,39 @@ interface BadgeProps extends React$1.HTMLAttributes<HTMLDivElement>, VariantProp
 }
 declare function Badge({ className, variant, ...props }: BadgeProps): react_jsx_runtime.JSX.Element;
 
+declare function Toaster(): react_jsx_runtime.JSX.Element;
+
+type ToastVariant = "default" | "destructive" | "success";
+interface ToastData {
+    id: string;
+    title?: React$1.ReactNode;
+    description?: React$1.ReactNode;
+    action?: ToastActionElement;
+    variant?: ToastVariant;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+}
+interface ToastOptions {
+    title?: React$1.ReactNode;
+    description?: React$1.ReactNode;
+    action?: ToastActionElement;
+    variant?: ToastVariant;
+}
+declare function toast(options: ToastOptions): {
+    id: string;
+    dismiss: () => void;
+    update: (props: Partial<ToastOptions>) => void;
+};
+declare function useToast(): {
+    toast: typeof toast;
+    dismiss: (toastId?: string) => void;
+    toasts: ToastData[];
+};
+
 /**
  * שילוב של clsx ו-tailwind-merge ליצירת פונקציה שימושית
  * לניהול מחלקות CSS בצורה דינמית
  */
 declare function cn(...inputs: ClassValue[]): string;
 
-export { Badge, type BadgeProps, Button, type ButtonProps, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, Input, type InputProps, Label, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue, SeverityBadge, Skeleton, Tabs, TabsContent, TabsList, TabsTrigger, Textarea, type TextareaProps, Toast, ToastAction, type ToastActionElement, ToastClose, ToastDescription, type ToastProps, ToastProvider, ToastTitle, ToastViewport, badgeVariants, buttonVariants, cn, useFormField };
+export { Badge, type BadgeProps, Button, type ButtonProps, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Form, FormControl, FormDescription, FormItem, FormLabel, FormMessage, Input, type InputProps, Label, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue, SeverityBadge, Skeleton, Tabs, TabsContent, TabsList, TabsTrigger, Textarea, type TextareaProps, Toast, ToastAction, type ToastActionElement, ToastClose, ToastDescription, type ToastData as ToastInfo, type ToastOptions, type ToastProps, ToastProvider, ToastTitle, type ToastVariant, ToastViewport, Toaster, badgeVariants, buttonVariants, cn, toast, useFormField, useToast };

@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import { NextAuthConfig } from "next-auth";
+import type { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
 import { userAuthSchema } from "@arxio/types";
@@ -15,7 +15,7 @@ const mockUsers = [
   }
 ];
 
-export const authConfig: NextAuthConfig = {
+const authConfig: AuthOptions = {
   // Removed PrismaAdapter
   session: {
     strategy: "jwt",

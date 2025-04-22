@@ -11,6 +11,7 @@
   "dependencies": {
     "@arxio/types": "workspace:*",
     "@arxio/ui": "workspace:*",
+    "@auth/core": "^0.39.0",
     "@hookform/resolvers": "^3.3.2",
     "@monaco-editor/react": "^4.7.0",
     "@prisma/client": "^5.7.0",
@@ -22,7 +23,7 @@
     "lucide-react": "^0.294.0",
     "monaco-editor": "^0.44.0",
     "next": "14.0.4",
-    "next-auth": "^5.0.0-beta.3",
+    "next-auth": "^4.24.11",
     "react": "^18",
     "react-dom": "^18",
     "react-hook-form": "^7.56.0",

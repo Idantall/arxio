@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
   title: "Login - ARXIO",
@@ -19,50 +20,7 @@ export default function LoginPage() {
           </p>
         </div>
         
-        <div className="grid gap-6">
-          <form>
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <label htmlFor="email" className="text-sm font-medium">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  autoCorrect="off"
-                  className="border rounded-md p-2"
-                />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between">
-                  <label htmlFor="password" className="text-sm font-medium">
-                    Password
-                  </label>
-                  <a
-                    href="/auth/forgot-password"
-                    className="text-sm text-primary underline-offset-4 hover:underline"
-                  >
-                    Forgot password?
-                  </a>
-                </div>
-                <input
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  className="border rounded-md p-2"
-                />
-              </div>
-              <button 
-                type="submit" 
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded-md"
-              >
-                Sign in
-              </button>
-            </div>
-          </form>
-        </div>
+        <LoginForm />
         
         <div className="relative">
           <div className="absolute inset-0 flex items-center">

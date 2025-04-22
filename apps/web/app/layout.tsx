@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { Providers } from './providers';
 
 export const metadata: Metadata = {
   title: 'ARXIO - סריקת אבטחה לקוד',
@@ -14,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <body className="min-h-screen bg-background">
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

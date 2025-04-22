@@ -46,34 +46,6 @@ const FormFieldContext = React.createContext<FormFieldContextValue>(
   {} as FormFieldContextValue
 );
 
-// DEPRECATED: יש להשתמש ב-Controller ישירות מ-react-hook-form
-const FormField = <
-  TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
->({
-  ...props
-}: ControllerProps<TFieldValues, TName>) => {
-  return (
-    <FormFieldContext.Provider value={{ name: props.name }}>
-      {/* 
-        הערה חשובה: 
-        במקום להשתמש ב-FormField, יש לייבא ולהשתמש ב-Controller ישירות:
-        
-        import { Controller } from 'react-hook-form';
-        
-        <Controller
-          control={form.control}
-          name="myField"
-          render={({ field }) => (
-            <Input {...field} />
-          )}
-        />
-      */}
-      {props.render?.({} as any)}
-    </FormFieldContext.Provider>
-  );
-};
-
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext);
   const itemContext = React.useContext(FormItemContext);
@@ -213,5 +185,4 @@ export {
   FormControl,
   FormDescription,
   FormMessage,
-  FormField,
 }; 

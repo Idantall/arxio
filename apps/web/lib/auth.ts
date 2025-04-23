@@ -3,20 +3,9 @@ import type { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
 import { userAuthSchema } from "@arxio/types";
-
-// Mock user for MVP
-const mockUsers = [
-  {
-    id: "1",
-    name: "Demo User",
-    email: "demo@example.com",
-    image: null,
-    passwordHash: "demo123", // Just for demo purposes
-  }
-];
+import { signIn as supabaseSignIn } from "./supabase";
 
 const authConfig: AuthOptions = {
-  // Removed PrismaAdapter
   session: {
     strategy: "jwt",
   },
@@ -37,7 +26,7 @@ const authConfig: AuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // Validate credentials
+        // וידוא תקינות הנתונים
         const parsedCredentials = userAuthSchema.safeParse(credentials);
         
         if (!parsedCredentials.success) {
@@ -46,28 +35,25 @@ const authConfig: AuthOptions = {
         
         const { email, password } = parsedCredentials.data;
         
-        // Use mock data instead of database
-        const user = mockUsers.find(u => u.email === email);
-        
-        if (!user || !user.passwordHash) {
+        try {
+          // התחברות באמצעות Supabase
+          const { user } = await supabaseSignIn(email, password);
+          
+          if (!user) {
+            return null;
+          }
+          
+          // החזרת פרטי המשתמש לNextAuth
+          return {
+            id: user.id,
+            name: user.user_metadata?.name || user.email?.split('@')[0],
+            email: user.email,
+            image: user.user_metadata?.avatar_url,
+          };
+        } catch (error) {
+          console.error("Authentication error:", error);
           return null;
         }
-        
-        // Simple password check for MVP
-        const isValidPassword = user.passwordHash === password || 
-                               // Demo option - allow "demo123" password
-                               password === "demo123";
-        
-        if (!isValidPassword) {
-          return null;
-        }
-        
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-        };
       },
     }),
   ],
@@ -78,8 +64,10 @@ const authConfig: AuthOptions = {
       }
       return session;
     },
-    async jwt({ token }) {
-      // You can modify the token if needed
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
       return token;
     },
   },

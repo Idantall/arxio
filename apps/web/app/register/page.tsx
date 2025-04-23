@@ -61,7 +61,7 @@ export default function RegisterPage() {
       }
 
       // Registration successful
-      router.push("/login?registered=true");
+      router.push("/auth/login?registered=true");
     } catch (error) {
       console.error("Registration error:", error);
       form.setError("root", {

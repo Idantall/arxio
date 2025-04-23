@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "docker-compose up web worker postgres redis zap",
+    "dev:local": "pnpm --filter ui build && pnpm --filter web dev",
     "build": "pnpm --filter web build",
     "start": "docker-compose up -d",
+    "start:local": "pnpm --filter web start",
     "lint": "eslint . && prettier --check .",
     "test": "pnpx vitest run",
     "migrate": "prisma migrate deploy"

@@ -1,5 +1,4 @@
-// Mock database for MVP
-// In a real application, this would be a Prisma client instance
+// Mock database for MVP - Will be replaced by Supabase
 
 import { Project } from "@arxio/types";
 
@@ -7,11 +6,12 @@ import { Project } from "@arxio/types";
 const projects: (Project & { userId: string, createdAt: string, updatedAt: string })[] = [
   {
     id: "1",
-    repoProvider: "github",
-    repoOwner: "arxio",
-    repoName: "demo-project",
-    defaultBranch: "main",
-    deployedUrl: "https://demo.arxio.com",
+    name: "Demo Project",
+    description: "זהו פרויקט הדגמה עבור ARXIO",
+    repositoryType: "github",
+    repositoryUrl: "https://github.com/arxio/demo-project",
+    branch: "main",
+    localPath: null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     userId: "1"

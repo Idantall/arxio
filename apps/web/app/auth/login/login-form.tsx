@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userAuthSchema } from "@arxio/types";
-import { Button } from "@arxio/ui";
-import { signIn } from "@/lib/auth";
-import { signIn as nextAuthSignIn } from "next-auth/react";
+import { signIn } from "next-auth/react";
+import { GitHubLogoIcon } from "@radix-ui/react-icons";
+import { MailIcon, LockIcon } from "lucide-react";
 
 export function LoginForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [isPending, setIsPending] = useState(false);
+  const [loginStatus, setLoginStatus] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -28,10 +28,19 @@ export function LoginForm() {
   });
 
   async function onSubmit(data: { email: string; password: string }) {
-    setIsPending(true);
+    setIsLoading(true);
     setError(null);
+    setLoginStatus(`מנסה להתחבר עם ${data.email}...`);
 
     try {
+      console.log('מתחבר עם אימייל:', data.email);
+      
+      // רק רושם סיסמאות בדיקה לצורכי דיבוג
+      if (data.email === 'test@example.com' || data.email === 'admin@example.com') {
+        console.log('דיבוג - ניסיון התחברות עם סיסמה:', data.password);
+      }
+      
+      setLoginStatus(`שולח בקשת התחברות...`);
       const result = await signIn("credentials", {
         email: data.email.toLowerCase(),
         password: data.password,
@@ -39,16 +48,28 @@ export function LoginForm() {
       });
 
       if (!result?.ok) {
-        setError("Invalid email or password");
+        console.error('ההתחברות נכשלה עם שגיאה:', result?.error);
+        setLoginStatus(`ההתחברות נכשלה: ${result?.error || "סיבה לא ידועה"}`);
+        setError(result?.error === "CredentialsSignin" ? "אימייל או סיסמה שגויים" : result?.error || "פרטי התחברות שגויים");
+        setIsLoading(false);
         return;
       }
 
+      console.log('התחברות הצליחה, מעביר לדף הבית...');
+      setLoginStatus('התחברות הצליחה! מעביר לדף הבית...');
+      
+      // רענון כפוי כדי לוודא שהסשן מעודכן
       router.refresh();
-      router.push("/dashboard");
+      
+      // השהייה קטנה לפני הפניה כדי לוודא שהסשן התבסס במלואו
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1000);
     } catch (error) {
-      setError("An error occurred. Please try again.");
-    } finally {
-      setIsPending(false);
+      console.error('פרטי שגיאת התחברות:', error);
+      setLoginStatus(`שגיאה לא צפויה: ${error instanceof Error ? error.message : String(error)}`);
+      setError("אירעה שגיאה. אנא נסה שוב.");
+      setIsLoading(false);
     }
   }
 
@@ -56,101 +77,116 @@ export function LoginForm() {
     setIsLoading(true);
     
     try {
-      await nextAuthSignIn("github", { callbackUrl: "/dashboard" });
+      // עבור התחברות GitHub, אנו משתמשים ב-redirect: true כדי לאפשר את זרימת OAuth החיצונית
+      await signIn("github", { callbackUrl: "/dashboard" });
     } catch (error) {
-      console.error("GitHub login error:", error);
-      setError("אירעה שגיאה בעת ניסיון ההתחברות דרך GitHub");
-    } finally {
+      console.error("שגיאת התחברות GitHub:", error);
+      setError("אירעה שגיאה בעת ניסיון להתחבר עם GitHub");
       setIsLoading(false);
     }
   };
 
   return (
-    <>
-      <div className="grid gap-6">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoCapitalize="none"
-                autoComplete="email"
-                autoCorrect="off"
-                disabled={isPending}
-                className="border rounded-md p-2"
-                {...register("email")}
-              />
-              {errors.email && (
-                <p className="text-sm text-red-500">{errors.email.message}</p>
-              )}
-            </div>
-            <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-sm font-medium">
-                  Password
-                </label>
-                <a
-                  href="/auth/forgot-password"
-                  className="text-sm text-primary underline-offset-4 hover:underline"
-                >
-                  Forgot password?
-                </a>
-              </div>
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                disabled={isPending}
-                className="border rounded-md p-2"
-                {...register("password")}
-              />
-              {errors.password && (
-                <p className="text-sm text-red-500">{errors.password.message}</p>
-              )}
-            </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button type="submit" disabled={isPending} className="w-full">
-              {isPending ? "Signing in..." : "Sign in"}
-            </Button>
+    <div className="grid gap-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-2">
+          <label htmlFor="email" className="text-sm font-medium block text-gray-700 dark:text-gray-300 rtl:text-right">
+            אימייל
+          </label>
+          <div className="relative">
+            <MailIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+            <input
+              id="email"
+              type="email"
+              autoCapitalize="none"
+              autoComplete="email"
+              autoCorrect="off"
+              disabled={isLoading}
+              placeholder="your@email.com"
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              {...register("email")}
+            />
           </div>
-        </form>
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              התחברות עם
-            </span>
-          </div>
-        </div>
-
-        <Button
-          variant="outline"
-          type="button"
-          disabled={isLoading}
-          onClick={handleGitHubLogin}
-          className="w-full flex items-center justify-center"
-        >
-          {isLoading ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          ) : (
-            <svg
-              className="mr-2 h-4 w-4"
-              aria-hidden="true"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-            </svg>
+          {errors.email && (
+            <p className="text-sm text-red-500 rtl:text-right">{errors.email.message}</p>
           )}
-          {isLoading ? "מתחבר..." : "התחברות באמצעות GitHub"}
-        </Button>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300 rtl:text-right">
+              סיסמה
+            </label>
+            <a
+              href="/auth/forgot-password"
+              className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              שכחת סיסמה?
+            </a>
+          </div>
+          <div className="relative">
+            <LockIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+            <input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              disabled={isLoading}
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              {...register("password")}
+            />
+          </div>
+          {errors.password && (
+            <p className="text-sm text-red-500 rtl:text-right">{errors.password.message}</p>
+          )}
+        </div>
+        
+        {loginStatus && (
+          <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg relative dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">
+            <strong className="font-bold">סטטוס:</strong>
+            <span className="block sm:inline"> {loginStatus}</span>
+          </div>
+        )}
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative dark:bg-red-900/20 dark:border-red-800 dark:text-red-400" role="alert">
+            <strong className="font-bold">שגיאה:</strong>
+            <span className="block sm:inline"> {error}</span>
+          </div>
+        )}
+        
+        <button 
+          type="submit" 
+          disabled={isLoading}
+          className="w-full py-2 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoading ? "מתחבר..." : "התחברות"}
+        </button>
+      </form>
+      
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t dark:border-gray-700" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white px-2 text-gray-500 dark:bg-gray-900 dark:text-gray-400">
+            או המשך עם
+          </span>
+        </div>
       </div>
-    </>
+
+      <button
+        type="button"
+        disabled={isLoading}
+        onClick={handleGitHubLogin}
+        className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-black text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:hover:bg-gray-700"
+      >
+        {isLoading ? (
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : (
+          <GitHubLogoIcon className="h-4 w-4" />
+        )}
+        {isLoading ? "מתחבר..." : "התחברות עם GitHub"}
+      </button>
+    </div>
   );
 } 

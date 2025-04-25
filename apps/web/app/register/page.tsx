@@ -1,14 +1,14 @@
 "use client";
 
-import React from "react";
-import Image from "next/image";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
-import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Form, FormControl, FormItem, FormLabel, FormMessage } from "@arxio/ui";
 import { LockIcon, MailIcon, UserIcon } from "lucide-react";
+import { GitHubLogoIcon } from "@radix-ui/react-icons";
+import { signIn } from "next-auth/react";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -28,6 +28,10 @@ const formSchema = z.object({
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [generalError, setGeneralError] = useState<string | null>(null);
+  const [isGitHubLoading, setIsGitHubLoading] = useState(false);
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -39,7 +43,12 @@ export default function RegisterPage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
+    setGeneralError(null);
+    
     try {
+      console.log('ניסיון לרשום משתמש:', values.email);
+      
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
@@ -52,137 +61,190 @@ export default function RegisterPage() {
         }),
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        form.setError("root", {
-          message: errorData.message || "שגיאה בעת הרישום. נסה שנית.",
-        });
+        console.error('שגיאת רישום:', data);
+        
+        if (response.status === 409) {
+          // אימייל כבר קיים
+          form.setError("email", {
+            type: "manual",
+            message: data.message || "כתובת האימייל כבר רשומה במערכת",
+          });
+        } else {
+          // שגיאה כללית
+          setGeneralError(data.message || "שגיאה בעת הרישום. נסה שנית.");
+        }
         return;
       }
 
-      // Registration successful
+      console.log('הרישום הושלם בהצלחה, מעביר לדף התחברות');
+      
+      // הרישום הצליח
       router.push("/auth/login?registered=true");
     } catch (error) {
-      console.error("Registration error:", error);
-      form.setError("root", {
-        message: "שגיאה בעת הרישום. נסה שנית.",
-      });
+      console.error("שגיאת רישום:", error);
+      setGeneralError("שגיאה בעת הרישום. נסה שנית או פנה לתמיכה.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
+  const handleGitHubLogin = async () => {
+    setIsGitHubLoading(true);
+    
+    try {
+      // עבור התחברות GitHub, אנו משתמשים ב-redirect: true כדי לאפשר את זרימת OAuth החיצונית
+      await signIn("github", { callbackUrl: "/dashboard" });
+    } catch (error) {
+      console.error("שגיאת התחברות GitHub:", error);
+      setGeneralError("אירעה שגיאה בעת ניסיון להתחבר עם GitHub");
+      setIsGitHubLoading(false);
+    }
+  };
+
   return (
-    <div className="container flex h-screen w-screen flex-col items-center justify-center">
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-        <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            הצטרפו לקהילת ARXIO
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-100 dark:from-gray-900 dark:to-black p-4">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">
+            הצטרפו ל-ARXIO
           </h1>
-          <p className="text-sm text-muted-foreground">
-            צרו חשבון חדש בשניות ספורות
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            צרו חשבון חדש או התחברו עם GitHub
           </p>
         </div>
 
-        <Card>
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">הרשמה</CardTitle>
-            <CardDescription className="text-center">
-              מלאו את הפרטים הבאים כדי להתחיל
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <Controller
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>שם מלא</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <UserIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                          <Input placeholder="ישראל ישראלי" className="pl-10" {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Controller
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>אימייל</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <MailIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                          <Input placeholder="you@example.com" className="pl-10" {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Controller
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>סיסמה</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <LockIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                          <Input type="password" className="pl-10" {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Controller
-                  control={form.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>אימות סיסמה</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <LockIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                          <Input type="password" className="pl-10" {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {form.formState.errors.root && (
-                  <div className="text-sm font-medium text-destructive">
-                    {form.formState.errors.root.message}
-                  </div>
-                )}
-                
-                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? "מתבצע רישום..." : "הרשמה"}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden p-6 space-y-6 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white">הרשמה</h2>
           
-          <CardFooter className="flex flex-col">
-            <div className="mt-4 text-center text-sm">
-              כבר יש לכם חשבון?{" "}
-              <Link href="/auth/login" className="underline">
-                התחברו כאן
-              </Link>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block rtl:text-right">
+                שם מלא
+              </label>
+              <div className="relative">
+                <UserIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="ישראל ישראלי"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  {...form.register("name")}
+                  disabled={isSubmitting}
+                />
+              </div>
+              {form.formState.errors.name && (
+                <p className="text-sm text-red-500 rtl:text-right">{form.formState.errors.name.message}</p>
+              )}
             </div>
-          </CardFooter>
-        </Card>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block rtl:text-right">
+                אימייל
+              </label>
+              <div className="relative">
+                <MailIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  {...form.register("email")}
+                  disabled={isSubmitting}
+                />
+              </div>
+              {form.formState.errors.email && (
+                <p className="text-sm text-red-500 rtl:text-right">{form.formState.errors.email.message}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block rtl:text-right">
+                סיסמה
+              </label>
+              <div className="relative">
+                <LockIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <input
+                  type="password"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  {...form.register("password")}
+                  disabled={isSubmitting}
+                />
+              </div>
+              {form.formState.errors.password && (
+                <p className="text-sm text-red-500 rtl:text-right">{form.formState.errors.password.message}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block rtl:text-right">
+                אימות סיסמה
+              </label>
+              <div className="relative">
+                <LockIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <input
+                  type="password"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  {...form.register("confirmPassword")}
+                  disabled={isSubmitting}
+                />
+              </div>
+              {form.formState.errors.confirmPassword && (
+                <p className="text-sm text-red-500 rtl:text-right">{form.formState.errors.confirmPassword.message}</p>
+              )}
+            </div>
+            
+            {generalError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative dark:bg-red-900/20 dark:border-red-800 dark:text-red-400" role="alert">
+                <strong className="font-bold">שגיאה:</strong>
+                <span className="block sm:inline"> {generalError}</span>
+              </div>
+            )}
+            
+            <button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="w-full py-2 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? "מתבצע רישום..." : "הרשמה"}
+            </button>
+          </form>
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t dark:border-gray-700" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                או המשך עם
+              </span>
+            </div>
+          </div>
+          
+          <button
+            type="button"
+            disabled={isGitHubLoading}
+            onClick={handleGitHubLogin}
+            className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-black text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:hover:bg-gray-700"
+          >
+            {isGitHubLoading ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            ) : (
+              <GitHubLogoIcon className="h-4 w-4" />
+            )}
+            {isGitHubLoading ? "מתחבר..." : "התחברות עם GitHub"}
+          </button>
+          
+          <div className="text-center text-sm">
+            <span className="text-gray-600 dark:text-gray-400">כבר יש לכם חשבון? </span>
+            <Link 
+              href="/auth/login" 
+              className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              התחברו כאן
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

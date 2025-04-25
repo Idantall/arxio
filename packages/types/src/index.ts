@@ -40,11 +40,12 @@ export const userRegistrationSchema = userAuthSchema.extend({
 // סכמת פרויקט
 export const projectSchema = z.object({
   id: z.string().optional(),
-  repoProvider: z.enum(['github', 'gitlab', 'bitbucket']),
-  repoOwner: z.string().min(1, { message: 'שם הבעלים נדרש' }),
-  repoName: z.string().min(1, { message: 'שם המאגר נדרש' }),
-  defaultBranch: z.string().default('main'),
-  deployedUrl: z.string().url({ message: 'כתובת URL לא תקינה' }).optional(),
+  name: z.string().min(3, { message: "שם הפרויקט חייב להכיל לפחות 3 תווים" }),
+  description: z.string().optional(),
+  repositoryType: z.enum(["github", "gitlab", "bitbucket", "local"]),
+  repositoryUrl: z.string().url({ message: "יש להזין כתובת URL תקינה" }).optional().nullable(),
+  branch: z.string().optional().nullable(),
+  localPath: z.string().optional().nullable(),
 });
 
 // סכמת סריקה

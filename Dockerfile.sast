@@ -1,0 +1,23 @@
+FROM node:18-alpine
+
+# התקנת כלים בסיסיים
+RUN apk add --no-cache git python3 make g++ curl
+
+# התקנת כלי סריקה נפוצים
+RUN npm install -g eslint snyk @hawkeyesec/scanner semgrep-agent
+
+# התקנת nodejsscan (לסריקת קוד Node.js)
+RUN npm install -g njsscan
+
+# הגדרת תיקיית עבודה
+WORKDIR /app
+
+# העתקת קוד השירות
+COPY ./apps/worker/scanners/sast.py .
+COPY ./packages/types ./packages/types
+
+# התקנת תלויות פייתון
+RUN pip3 install --no-cache-dir redis requests
+
+# הגדרת פקודת הפעלה
+CMD ["python3", "sast.py"] 

@@ -19,5 +19,19 @@
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "framer-motion": "^11.0.0"
-  }
+  },
+  "description": "Arxio היא מערכת מקיפה לסריקת אבטחה של אפליקציות, API ואתרי אינטרנט. המערכת מאפשרת לארגונים לזהות ולטפל בפרצות אבטחה במהירות וביעילות.",
+  "main": "create-sample-project.js",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Idantall/arxio.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Idantall/arxio/issues"
+  },
+  "homepage": "https://github.com/Idantall/arxio#readme"
 }

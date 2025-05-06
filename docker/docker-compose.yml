@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # Redis - עבור תקשורת ותור עבודה
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  # Worker ראשי - מנהל את כל בקשות הסריקה
+  worker:
+    build:
+      context: ../
+      dockerfile: docker/worker/Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    depends_on:
+      - redis
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # סורק SAST - סריקת קוד סטטית
+  sast-scanner:
+    build:
+      context: ../
+      dockerfile: docker/scanners/sast/Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # סורק DAST - סריקה דינמית
+  dast-scanner:
+    build:
+      context: ../
+      dockerfile: docker/scanners/dast/Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # סורק API
+  api-scanner:
+    build:
+      context: ../
+      dockerfile: docker/scanners/api/Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  redis-data: 

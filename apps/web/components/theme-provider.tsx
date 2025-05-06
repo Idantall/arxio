@@ -1,9 +1,20 @@
 "use client"
 
-import * as React from "react"
+import { useState, useEffect } from "react"
 import { ThemeProvider as NextThemesProvider } from "next-themes"
-import { type ThemeProviderProps } from "next-themes/dist/types"
 
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+export function ThemeProvider({ children, ...props }: any) {
+  const [mounted, setMounted] = useState(false)
+
+  // הרכיב יוצג רק אחרי הרנדור הראשוני בלקוח
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // במהלך ההידרציה הראשונית, נציג תוכן ריק למניעת בעיות הידרציה
+  if (!mounted) {
+    return <div style={{ visibility: "hidden" }}>{children}</div>
+  }
+
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>
 } 

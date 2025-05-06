@@ -26,102 +26,110 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 
 // פרטי המשתמש הקשיח
 const USER = {
-  email: 'test@example.com',
-  password: 'Test1234!',
-  username: 'testuser',
+  email: 'admin@arxio.io',
+  password: 'Aa123456',
+  username: 'admin',
+  role: 'admin'
 };
 
 async function createUser() {
   try {
-    console.log(`מנסה ליצור משתמש: ${USER.email}`);
+    // בדיקת מבנה הטבלה
+    console.log('בודק את מבנה הטבלה...');
     
-    // בדיקה אם המשתמש כבר קיים
-    const { data: existingUsers, error: searchError } = await supabaseAdmin
-      .from('users')
-      .select('*')
-      .eq('email', USER.email);
-    
-    if (searchError) {
-      throw new Error(`שגיאה בחיפוש משתמש קיים: ${searchError.message}`);
+    try {
+      // קבלת מידע על מבנה טבלת המשתמשים
+      const { data, error } = await supabaseAdmin
+        .from('users')
+        .select('*')
+        .limit(1);
+      
+      if (error) {
+        console.error('שגיאה בקבלת מבנה הטבלה:', error);
+      } else if (data && data.length > 0) {
+        console.log('מבנה טבלת המשתמשים:');
+        console.log(Object.keys(data[0]));
+      } else {
+        console.log('טבלת המשתמשים ריקה');
+      }
+    } catch (e) {
+      console.error('שגיאה בבדיקת מבנה הטבלה:', e);
     }
     
-    if (existingUsers && existingUsers.length > 0) {
-      console.log(`משתמש עם האימייל ${USER.email} כבר קיים!`);
-      console.log('פרטי המשתמש הקיים:');
-      console.log(existingUsers[0]);
-      
-      // בדיקה אם המשתמש קיים גם במערכת האימות של סופרבייס
-      console.log('בודק אם המשתמש קיים גם במערכת האימות של סופרבייס...');
-      const { data: authUsers, error: authListError } = await supabaseAdmin.auth.admin.listUsers();
-      
-      if (authListError) {
-        console.warn(`אזהרה: לא הצלחנו לבדוק אם המשתמש קיים במערכת האימות: ${authListError.message}`);
-      } else {
-        const authUser = authUsers.users.find(u => u.email === USER.email);
-        if (authUser) {
-          console.log('המשתמש קיים גם במערכת האימות של סופרבייס:', authUser);
-        } else {
-          console.log('המשתמש לא קיים במערכת האימות של סופרבייס');
-          console.log('מנסה ליצור משתמש במערכת האימות...');
-          
-          const { data: newAuthUser, error: authCreateError } = await supabaseAdmin.auth.admin.createUser({
-            email: USER.email,
-            password: USER.password,
-            email_confirm: true
-          });
-          
-          if (authCreateError) {
-            console.warn(`אזהרה: לא הצלחנו ליצור משתמש במערכת האימות: ${authCreateError.message}`);
-          } else {
-            console.log('משתמש נוצר בהצלחה במערכת האימות:', newAuthUser);
-          }
-        }
-      }
-      
+    console.log('בודק אם המשתמש כבר קיים...');
+    
+    // בדיקה אם המשתמש כבר קיים
+    const { data: existingUser, error: lookupError } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('email', USER.email)
+      .maybeSingle();
+    
+    if (lookupError) {
+      console.error('שגיאה בחיפוש משתמש קיים:', lookupError);
+    }
+    
+    if (existingUser) {
+      console.log('משתמש כבר קיים:', existingUser);
       return;
     }
     
-    // הצפנת הסיסמה
+    // יצירת גיבוב לסיסמה
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(USER.password, salt);
     
-    // יצירת משתמש בטבלת המשתמשים
-    const { data: newUser, error: insertError } = await supabaseAdmin
-      .from('users')
-      .insert([
-        {
+    // ניסיון ליצור משתמש חדש עם שדה password
+    console.log('מנסה ליצור משתמש עם שדה password...');
+    
+    try {
+      const { data: newUser, error: insertError } = await supabaseAdmin
+        .from('users')
+        .insert({
           email: USER.email,
           username: USER.username,
           password: hashedPassword,
+          role: USER.role,
           created_at: new Date().toISOString(),
-        }
-      ])
-      .select();
-    
-    if (insertError) {
-      throw new Error(`שגיאה ביצירת משתמש: ${insertError.message}`);
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      if (insertError) {
+        console.error('שגיאה בניסיון הראשון:', insertError);
+      } else {
+        console.log('משתמש נוצר בהצלחה:', newUser);
+      }
+    } catch (e) {
+      console.error('שגיאה לא צפויה בניסיון הראשון:', e);
     }
     
-    console.log('משתמש נוצר בהצלחה:', newUser);
+    // אם הניסיון הראשון נכשל, ננסה עם auth
+    console.log('יוצר משתמש במערכת האימות של Supabase...');
     
-    // בדיקה אם נדרש גם ליצור משתמש באימות של סופרבייס
-    console.log('בודק אם נדרשת גם יצירת משתמש במערכת האימות של סופרבייס...');
-    
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: USER.email,
-      password: USER.password,
-      email_confirm: true
-    });
-    
-    if (authError) {
-      console.warn(`אזהרה: לא הצלחנו ליצור משתמש במערכת האימות של סופרבייס: ${authError.message}`);
-      console.warn('ייתכן שתצטרך להשתמש באפשרות התחברות עם אישורים מותאמים אישית.');
-    } else {
-      console.log('משתמש נוצר גם במערכת האימות של סופרבייס:', authUser);
+    try {
+      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: USER.email,
+        password: USER.password,
+        email_confirm: true
+      });
+      
+      if (authError) {
+        console.error('שגיאה ביצירת המשתמש במערכת האימות:', authError);
+      } else {
+        console.log('משתמש נוצר בהצלחה במערכת האימות:', authUser);
+      }
+    } catch (authCreationError) {
+      console.error('שגיאה לא צפויה ביצירת משתמש במערכת האימות:', authCreationError);
     }
+    
+    console.log('\n===== יצירת המשתמש הושלמה =====');
+    console.log('כתובת דוא"ל:', USER.email);
+    console.log('סיסמה:', USER.password);
+    console.log('=================================\n');
     
   } catch (error) {
-    console.error('שגיאה ביצירת משתמש:', error);
+    console.error('שגיאה ביצירת המשתמש:', error);
     process.exit(1);
   }
 }
@@ -129,9 +137,6 @@ async function createUser() {
 createUser()
   .then(() => {
     console.log('הסקריפט הסתיים בהצלחה!');
-    console.log('פרטי ההתחברות:');
-    console.log(`אימייל: ${USER.email}`);
-    console.log(`סיסמה: ${USER.password}`);
     process.exit(0);
   })
   .catch(err => {

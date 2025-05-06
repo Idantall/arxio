@@ -1,42 +1,98 @@
 version: '3.8'
 
 services:
+  # שרת ה-web
   web:
     build:
-      context: ./apps/web
-      dockerfile: Dockerfile.dev
+      context: .
+      dockerfile: docker/web/Dockerfile
     ports:
       - "3000:3000"
-    volumes:
-      - ./apps/web:/app
-      - /app/node_modules
     environment:
-      - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/arxio
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
       - REDIS_URL=redis://redis:6379
-      - WORKER_URL=http://worker:8000
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
     depends_on:
       - postgres
       - redis
       - worker
+    restart: always
 
+  # שרת ה-worker
   worker:
     build:
-      context: ./apps/worker
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./apps/worker:/app
+      context: .
+      dockerfile: docker/worker/Dockerfile
     environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - ZAP_API_URL=http://zap:8080/JSON
-      - POSTGRES_CONNECTION=postgresql://postgres:postgres@postgres:5432/arxio
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/arxio
+      - REDIS_URL=redis://redis:6379
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - redis
       - postgres
-      - zap
+    restart: always
+
+  # סורק SAST - ניתוח סטטי של קוד מקור
+  sast-scanner:
+    build:
+      context: .
+      dockerfile: docker/scanners/sast.Dockerfile
+    volumes:
+      - sast-data:/tmp/sast
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+    depends_on:
+      - redis
+    restart: always
+
+  # סורק DAST - בדיקת אפליקציות רצות
+  dast-scanner:
+    build:
+      context: .
+      dockerfile: docker/scanners/dast.Dockerfile
+    volumes:
+      - dast-data:/tmp/dast
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+    depends_on:
+      - redis
+    restart: always
+
+  # סורק API - בדיקת ממשקי API
+  api-scanner:
+    build:
+      context: .
+      dockerfile: docker/scanners/api.Dockerfile
+    volumes:
+      - api-data:/tmp/api
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+    depends_on:
+      - redis
+    restart: always
+
+  # שירות Redis
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: always
 
   postgres:
     image: postgres:15
@@ -48,23 +104,10 @@ services:
       - POSTGRES_DB=arxio
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-
-  zap:
-    image: ghcr.io/zaproxy/zaproxy:stable
-    command: zap.sh -daemon -host 0.0.0.0 -port 8080 -config api.disablekey=true -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true
-    ports:
-      - "8080:8080"
-    volumes:
-      - zap_data:/zap/wrk
+    restart: always
 
 volumes:
   postgres_data:
-  redis_data:
-  zap_data: 
+  sast-data:
+  dast-data:
+  api-data: 

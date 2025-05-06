@@ -9,6 +9,7 @@ import { z } from "zod";
 import { LockIcon, MailIcon, UserIcon } from "lucide-react";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
 import { signIn } from "next-auth/react";
+import Image from "next/image";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -105,13 +106,22 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-100 dark:from-gray-900 dark:to-black p-4">
+    <div className="min-h-screen max-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800 p-4 overflow-hidden">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">
+          <div className="flex justify-center mb-4">
+            <Image 
+              src="/logo.png" 
+              alt="Arxio Logo" 
+              width={150} 
+              height={50} 
+              className="h-auto dark:brightness-0 dark:invert"
+            />
+          </div>
+          <h1 className="text-3xl font-extrabold text-white">
             הצטרפו ל-ARXIO
           </h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-sm text-gray-300">
             צרו חשבון חדש או התחברו עם GitHub
           </p>
         </div>

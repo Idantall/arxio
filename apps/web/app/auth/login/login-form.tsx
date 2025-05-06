@@ -27,6 +27,35 @@ export function LoginForm() {
     },
   });
 
+  // פונקציה לתיקון אימות אוטומטי לאחר התחברות מוצלחת
+  const tryFixAuth = async (email: string) => {
+    try {
+      setLoginStatus('מבצע סנכרון מזהה משתמש...');
+      
+      const response = await fetch('/api/fix-auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+        }),
+      });
+      
+      if (response.ok) {
+        console.log('סנכרון מזהה משתמש הושלם בהצלחה');
+        return true;
+      } else {
+        // לא נכשל בחומרה - ממשיך לדף הבקרה למרות השגיאה
+        console.warn('אזהרה: סנכרון מזהה משתמש לא הושלם');
+        return false;
+      }
+    } catch (error) {
+      console.error('שגיאה בתיקון אימות אוטומטי:', error);
+      return false;
+    }
+  };
+
   async function onSubmit(data: { email: string; password: string }) {
     setIsLoading(true);
     setError(null);
@@ -55,11 +84,16 @@ export function LoginForm() {
         return;
       }
 
-      console.log('התחברות הצליחה, מעביר לדף הבית...');
-      setLoginStatus('התחברות הצליחה! מעביר לדף הבית...');
+      console.log('התחברות הצליחה, מבצע סנכרון מזהה...');
+      setLoginStatus('התחברות הצליחה! מבצע סנכרון מזהה משתמש...');
+      
+      // ניסיון לתקן את האימות אחרי התחברות מוצלחת
+      await tryFixAuth(data.email.toLowerCase());
       
       // רענון כפוי כדי לוודא שהסשן מעודכן
       router.refresh();
+      
+      setLoginStatus('התחברות והסנכרון הושלמו בהצלחה! מעביר לדף הבית...');
       
       // השהייה קטנה לפני הפניה כדי לוודא שהסשן התבסס במלואו
       setTimeout(() => {
@@ -78,7 +112,7 @@ export function LoginForm() {
     
     try {
       // עבור התחברות GitHub, אנו משתמשים ב-redirect: true כדי לאפשר את זרימת OAuth החיצונית
-      await signIn("github", { callbackUrl: "/dashboard" });
+      await signIn("github", { callbackUrl: "/api/auth/github-callback" });
     } catch (error) {
       console.error("שגיאת התחברות GitHub:", error);
       setError("אירעה שגיאה בעת ניסיון להתחבר עם GitHub");

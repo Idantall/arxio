@@ -1,0 +1,20 @@
+FROM owasp/zap2docker-stable:latest
+
+# התקנת פייתון ותלויות
+USER root
+RUN apt-get update && apt-get install -y python3 python3-pip
+RUN pip3 install redis requests
+
+# העתקת קוד השירות
+WORKDIR /zap/app
+COPY ./apps/worker/scanners/dast.py .
+COPY ./packages/types ./packages/types
+
+# הגדרת הרשאות
+RUN chmod +x dast.py
+
+# חזרה למשתמש ZAP
+USER zap
+
+# הגדרת פקודת הפעלה
+CMD ["python3", "dast.py"] 

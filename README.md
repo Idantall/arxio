@@ -1,48 +1,81 @@
-# ARXIO (v0.1)
+# Arxio - מערכת לסריקת אבטחה
 
-**Real-time code & app vulnerability scans for solo developers**
+Arxio היא מערכת מקיפה לסריקת אבטחה של אפליקציות, API ואתרי אינטרנט. המערכת מאפשרת לארגונים לזהות ולטפל בפרצות אבטחה במהירות וביעילות.
 
-ARXIO allows solo developers to easily scan their code and applications to identify security issues and vulnerabilities in real-time.
+## ארכיטקטורה
 
-## Key Features
+המערכת מורכבת מהרכיבים הבאים:
 
-1. **Connect a code repository** (GitHub / GitLab / Bitbucket) and select a branch to scan.
-2. **Enter or detect a deployed URL** for the repository.
-3. **View static (SAST) and dynamic (DAST) scan results** in real-time while editing code in a browser-integrated code editor.
-4. **Fix issues**, commit directly back to Git, and run re-scans - without leaving the platform.
+- **Web Application**: ממשק משתמש מבוסס Next.js שמאפשר למשתמשים לנהל פרויקטים, ליצור סריקות חדשות ולצפות בתוצאות.
+- **Worker Server**: שרת Python שאחראי על הרצת סריקות אבטחה שונות ועיבוד התוצאות.
+- **Redis**: משמש לתקשורת בין שרת ה-web לשרת ה-worker ולניהול תורי עבודה.
+- **Postgres/Supabase**: מסד נתונים לאחסון מידע של משתמשים, פרויקטים ותוצאות סריקה.
 
-## Technical Documentation
+## סוגי סריקות
 
-### Architecture
-Monorepo project (pnpm workspaces) with:
-- Next.js 14 application for UI and API routes
-- Python FastAPI microservice for security scans
-- Shared UI components and TypeScript types
+המערכת תומכת במספר סוגי סריקות:
 
-### Core Technologies
-- Database: PostgreSQL 15 via Prisma ORM
-- Authentication: NextAuth v5 (JWT), Argon2id hashes, Redis sessions
-- Real-time: Socket.IO
-- Static Analysis: Semgrep, TruffleHog, Snyk CLI
-- Dynamic Scans: OWASP ZAP, custom Python scanners
-- Background Jobs: Python RQ
-- Containers: Docker + docker-compose
+1. **SAST (Static Application Security Testing)**: ניתוח קוד מקור לזיהוי בעיות אבטחה.
+2. **DAST (Dynamic Application Security Testing)**: בדיקת אבטחה דינמית לאפליקציות ואתרים פעילים.
+3. **API Security Testing**: סריקת ממשקי API לזיהוי חולשות ובעיות אבטחה.
 
-## Installation and Running
+## התקנה והרצה
+
+### דרישות מקדימות
+
+- Docker ו-Docker Compose
+- Supabase Account
+
+### משתני סביבה
+
+צור קובץ `.env` בתיקיית הפרויקט הראשית עם הפרמטרים הבאים:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_KEY=your_supabase_service_key
+```
+
+### הרצה
+
+כדי להריץ את המערכת המלאה:
 
 ```bash
-# Install dependencies
+docker-compose up -d
+```
+
+הממשק יהיה זמין בכתובת: `http://localhost:3000`
+
+### יצירת משתמש ראשון
+
+אחרי הרצת המערכת, יש ליצור משתמש ראשון באמצעות הסקריפט הבא:
+
+```bash
+docker-compose exec web pnpm --filter=web run create-hardcoded-user
+```
+
+פרטי התחברות ברירת מחדל:
+- אימייל: admin@arxio.io
+- סיסמה: Aa123456
+
+## פיתוח
+
+### הרצה בסביבת פיתוח
+
+להרצת המערכת בסביבת פיתוח:
+
+```bash
+# התקנת חבילות
 pnpm install
 
-# Run the project in development mode
-pnpm dev
+# הרצת שרת ה-web
+pnpm --filter=web dev
 
-# Run tests
-pnpm test
+# הרצת שרת ה-worker
+cd apps/worker
+python worker.py
+```
 
-# Build the project for production
-pnpm build
+## רישיון
 
-# Run the project in production mode
-pnpm start
-``` 
+הפרויקט מופץ תחת רישיון MIT. 

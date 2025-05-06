@@ -3,119 +3,71 @@ import { createClient } from '@supabase/supabase-js';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET() {
-  try {
-    // בדיקת הגדרות הסביבה
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-    
-    if (!supabaseUrl || !supabaseKey || !supabaseServiceKey) {
-      return NextResponse.json({
-        success: false,
-        message: 'Missing Supabase environment variables',
-        env: {
-          hasUrl: !!supabaseUrl,
-          hasAnonKey: !!supabaseKey,
-          hasServiceKey: !!supabaseServiceKey
-        }
-      }, { status: 500 });
+  // בדיקה בסיסית של משתני הסביבה
+  const environmentInfo = {
+    supabase: {
+      url: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+      anonKey: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+      serviceKey: Boolean(process.env.SUPABASE_SERVICE_KEY),
+      urlValue: maskString(process.env.NEXT_PUBLIC_SUPABASE_URL || ''),
+      anonKeyValue: maskString(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''),
+      serviceKeyValue: maskString(process.env.SUPABASE_SERVICE_KEY || '')
+    },
+    nextAuth: {
+      url: Boolean(process.env.NEXTAUTH_URL),
+      secret: Boolean(process.env.NEXTAUTH_SECRET)
+    },
+    github: {
+      clientId: Boolean(process.env.GITHUB_CLIENT_ID),
+      clientSecret: Boolean(process.env.GITHUB_CLIENT_SECRET)
+    },
+    node: {
+      env: process.env.NODE_ENV,
+      version: process.version,
+    },
+    runtime: {
+      timestamp: new Date().toISOString(),
+      serverTime: new Date().toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })
     }
+  };
 
-    // בדיקת חיבור לסופאבייס
-    const connectionTest = await supabaseAdmin.from('users').select('count').limit(1);
-    
-    let tableInfo: Record<string, string> = {};
-    let userCount = 0;
-    let projectCount = 0;
-    let sampleUser = null;
-    
-    // בדיקת מבנה טבלת משתמשים
-    const { data: usersTable, error: usersTableError } = await supabaseAdmin
-      .from('users')
-      .select('*')
-      .limit(1);
-      
-    if (!usersTableError) {
-      const { data: usersCountData, error: usersCountError } = await supabaseAdmin
-        .from('users')
-        .select('count');
-      
-      if (!usersCountError && usersCountData.length > 0) {
-        userCount = usersCountData[0].count;
-      }
-      
-      // קבלת דוגמת משתמש אם יש
-      if (userCount > 0) {
-        const { data: oneUser, error: oneUserError } = await supabaseAdmin
-          .from('users')
-          .select('*')
-          .limit(1)
-          .single();
-          
-        if (!oneUserError) {
-          sampleUser = oneUser;
-        }
-      }
-      
-      tableInfo.users = usersTable.length > 0 
-        ? Object.keys(usersTable[0]).join(', ') 
-        : 'טבלה ריקה';
+  // מידע על הבקשה
+  const requestInfo = {
+    headers: {
+      // הצגת המידע העיקרי מהדפדפן ללא מידע רגיש
+      userAgent: maskString(String(process.env.USER_AGENT || '')),
+      referer: maskString(String(process.env.HTTP_REFERER || '')),
+      host: maskString(String(process.env.HTTP_HOST || ''))
     }
-    
-    // בדיקת טבלת פרויקטים
-    const { data: projectsTable, error: projectsTableError } = await supabaseAdmin
-      .from('projects')
-      .select('*')
-      .limit(1);
-      
-    if (!projectsTableError) {
-      const { data: projectsCountData, error: projectsCountError } = await supabaseAdmin
-        .from('projects')
-        .select('count');
-      
-      if (!projectsCountError && projectsCountData.length > 0) {
-        projectCount = projectsCountData[0].count;
-      }
-      
-      tableInfo.projects = projectsTable.length > 0 
-        ? Object.keys(projectsTable[0]).join(', ') 
-        : 'טבלה ריקה';
-    } else {
-      tableInfo.projects = `שגיאה: ${projectsTableError.message}`;
-    }
-    
-    // בדיקת התצורה של NextAuth
-    const nextAuthUrl = process.env.NEXTAUTH_URL;
-    const nextAuthSecret = process.env.NEXTAUTH_SECRET;
-    const githubId = process.env.GITHUB_CLIENT_ID;
-    const githubSecret = process.env.GITHUB_CLIENT_SECRET;
-    
-    return NextResponse.json({
-      success: true,
-      connectionStatus: connectionTest.error ? 'כישלון' : 'הצלחה',
-      connectionError: connectionTest.error,
-      counts: {
-        users: userCount,
-        projects: projectCount
-      },
-      tableInfo,
-      sampleUser,
-      config: {
-        supabaseUrl,
-        hasAnonKey: !!supabaseKey,
-        hasServiceKey: !!supabaseServiceKey,
-        nextAuthUrl,
-        hasNextAuthSecret: !!nextAuthSecret,
-        hasGithubId: !!githubId,
-        hasGithubSecret: !!githubSecret
-      }
-    });
-  } catch (error) {
-    console.error('Debug error:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'שגיאה בבדיקת סופאבייס',
-      error: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
+  };
+
+  return NextResponse.json({
+    message: 'מידע דיבאג סופאבייס',
+    environment: environmentInfo,
+    request: requestInfo,
+    guide: [
+      'אם אתה רואה false לאחד מהמפתחות של סופאבייס, זה מעיד על בעיה בטעינת משתני הסביבה',
+      'ודא שיש לך קובץ .env.local בתיקיית apps/web עם הגדרות תקינות',
+      'הפעל את הסקריפט scripts/update-env.js כדי ליצור קובץ הגדרות חדש',
+      'הפעל מחדש את שרת הפיתוח לאחר עדכון הקובץ'
+    ]
+  });
+}
+
+// פונקציית עזר להסתרת מידע רגיש
+function maskString(input: string): string {
+  if (!input || input.length === 0) return '';
+  
+  // אם המחרוזת קצרה מ-8 תווים, הצג את התו הראשון והאחרון
+  if (input.length < 8) {
+    return `${input.charAt(0)}*****${input.charAt(input.length - 1)}`;
   }
+  
+  // אחרת, הצג את 3 התווים הראשונים ו-3 האחרונים
+  const prefix = input.substring(0, 3);
+  const suffix = input.substring(input.length - 3);
+  const maskedLength = input.length - 6;
+  const stars = '*'.repeat(Math.min(maskedLength, 10));
+  
+  return `${prefix}${stars}${suffix}`;
 } 

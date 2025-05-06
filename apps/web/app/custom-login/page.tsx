@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { MailIcon, LockIcon, GithubIcon } from "lucide-react";
+import Image from "next/image";
 
 // ציטוטים בנושא אבטחה מידע
 const securityQuotes = [
@@ -53,11 +54,19 @@ export default function CustomLoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+    <div className="flex min-h-screen max-h-screen w-full overflow-hidden bg-gradient-to-b from-gray-900 to-gray-800">
       {/* חלק ציטוט אבטחה */}
       <div className="hidden md:flex md:w-1/2 flex-col justify-center items-center p-10 bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
         <div className="max-w-md text-center">
-          <h2 className="text-3xl font-bold mb-6">ARXIO</h2>
+          <div className="flex justify-center mb-6">
+            <Image 
+              src="/logo.png" 
+              alt="Arxio Logo" 
+              width={180} 
+              height={60} 
+              className="h-auto brightness-0 invert"
+            />
+          </div>
           <blockquote className="text-xl mb-4 italic">"{randomQuote.quote}"</blockquote>
           <p className="text-sm">— {randomQuote.author}</p>
           
@@ -76,9 +85,18 @@ export default function CustomLoginPage() {
       </div>
       
       {/* חלק טופס התחברות */}
-      <div className="w-full md:w-1/2 flex justify-center items-center p-4 sm:p-6 lg:p-8">
+      <div className="w-full md:w-1/2 flex justify-center items-center p-4 sm:p-6 lg:p-8 overflow-y-auto">
         <div className="w-full max-w-md space-y-8 bg-white dark:bg-gray-900 p-8 rounded-xl shadow-lg">
           <div className="text-center">
+            <div className="flex justify-center mb-4 md:hidden">
+              <Image 
+                src="/logo.png" 
+                alt="Arxio Logo" 
+                width={150} 
+                height={50} 
+                className="h-auto dark:brightness-0 dark:invert"
+              />
+            </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">ברוכים השבים</h2>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
               התחברו לחשבון שלכם כדי להמשיך

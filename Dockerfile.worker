@@ -1,0 +1,19 @@
+FROM node:18-alpine
+
+# התקנת כלים בסיסיים
+RUN apk add --no-cache git python3 make g++
+
+# הגדרת תיקיית עבודה
+WORKDIR /app
+
+# העתקת קבצי package.json ו-package-lock.json
+COPY package*.json ./
+
+# התקנת תלויות
+RUN npm install
+
+# העתקת כל הקוד
+COPY . .
+
+# הגדרת פקודת הפעלה
+CMD ["node", "apps/worker/index.js"] 
